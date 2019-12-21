@@ -15,9 +15,6 @@ namespace ICSharpCode.TreeView
 	/// </summary>
 	public class SharpTreeViewTextSearch : DependencyObject
 	{
-		[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-		private static extern int GetDoubleClickTime();
-
 		private static readonly DependencyPropertyKey TextSearchInstancePropertyKey = DependencyProperty.RegisterAttachedReadOnly("TextSearchInstance",
 			typeof(SharpTreeViewTextSearch), typeof(SharpTreeViewTextSearch), new FrameworkPropertyMetadata(null));
 		private static readonly DependencyProperty TextSearchInstanceProperty = TextSearchInstancePropertyKey.DependencyProperty;
@@ -46,17 +43,19 @@ namespace ICSharpCode.TreeView
 
 		public bool RevertLastCharacter()
 		{
-			if (!isActive || inputStack.Count == 0)
-				return false;
-			matchPrefix = matchPrefix.Remove(matchPrefix.Length - inputStack.Pop().Length);
-			ResetTimeout();
-			return true;
+			if (isActive && inputStack.TryPop(out string? top)) {
+				matchPrefix = matchPrefix.Remove(matchPrefix.Length - top.Length);
+				ResetTimeout();
+				return true;
+			}
+
+			return false;
 		}
 
 		public bool Search(string nextChar)
 		{
 			int startIndex = isActive ? lastMatchIndex : Math.Max(0, treeView.SelectedIndex);
-			bool lookBackwards = inputStack.Count > 0 && string.Compare(inputStack.Peek(), nextChar, StringComparison.OrdinalIgnoreCase) == 0;
+			bool lookBackwards = inputStack.TryPeek(out string? top) && string.Equals(top, nextChar, StringComparison.OrdinalIgnoreCase);
 			int nextMatchIndex = IndexOfMatch(matchPrefix + nextChar, startIndex, lookBackwards, out bool wasNewCharUsed);
 			if (nextMatchIndex != -1) {
 				if (!isActive || nextMatchIndex != startIndex) {
@@ -105,7 +104,7 @@ namespace ICSharpCode.TreeView
 						}
 					}
 				}
-				i++;
+				++i;
 				if (i >= treeView.Items.Count)
 					i = 0;
 			} while (i != startIndex);
@@ -130,8 +129,14 @@ namespace ICSharpCode.TreeView
 			} else {
 				timer.Stop();
 			}
-			timer.Interval = TimeSpan.FromMilliseconds(GetDoubleClickTime() * 2);
+			timer.Interval = TimeSpan.FromMilliseconds(NativeMethods.GetDoubleClickTime() * 2);
 			timer.Start();
+		}
+
+		private static class NativeMethods
+		{
+			[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+			public static extern int GetDoubleClickTime();
 		}
 	}
 }

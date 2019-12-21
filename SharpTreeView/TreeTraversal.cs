@@ -45,8 +45,8 @@ namespace ICSharpCode.TreeView
 					stack.Pop().Dispose();
 				}
 			} finally {
-				while (stack.Count > 0) {
-					stack.Pop().Dispose();
+				while (stack.TryPop(out var top)) {
+					top.Dispose();
 				}
 			}
 		}

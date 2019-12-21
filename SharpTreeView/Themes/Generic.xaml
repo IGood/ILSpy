@@ -4,8 +4,7 @@
 
     <SolidColorBrush x:Key="ListBorder" Color="#FF7F9DB9" />
 
-    <Style x:Key="ExpandCollapseToggleStyle"
-           TargetType="{x:Type ToggleButton}">
+    <Style x:Key="ExpandCollapseToggleStyle" TargetType="{x:Type ToggleButton}">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -90,8 +89,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="{x:Static Default:SharpTreeView.DefaultItemContainerStyleKey}"
-           TargetType="{x:Type Default:SharpTreeViewItem}">
+    <Style x:Key="{x:Static Default:SharpTreeView.DefaultItemContainerStyleKey}" TargetType="{x:Type Default:SharpTreeViewItem}">
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
@@ -103,8 +101,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="{x:Static Default:SharpGridView.ItemContainerStyleKey}"
-           TargetType="{x:Type ListViewItem}">
+    <Style x:Key="{x:Static Default:SharpGridView.ItemContainerStyleKey}" TargetType="{x:Type ListViewItem}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -120,8 +117,7 @@
                                               SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected"
-                                 Value="true">
+                        <Trigger Property="IsSelected" Value="true">
                             <Setter TargetName="Bd"
                                     Property="Background"
                                     Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
@@ -141,10 +137,8 @@
                             <Setter Property="Foreground"
                                     Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
                         </MultiTrigger>
-                        <Trigger Property="IsEnabled"
-                                 Value="false">
-                            <Setter Property="Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -194,7 +188,9 @@
         </Setter>
     </Style>
 
-    <Style TargetType="{x:Type Default:SharpTreeNodeView}">
+	<BooleanToVisibilityConverter x:Key="CollapsedWhenFalse" />
+
+	<Style TargetType="{x:Type Default:SharpTreeNodeView}">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -202,7 +198,7 @@
                     <Grid>
                         <Default:LinesRenderer x:Name="PART_LinesRenderer"
                                                ClipToBounds="True"
-                                               Visibility="{Binding ShowLines, RelativeSource={RelativeSource AncestorType={x:Type Default:SharpTreeView}}, Converter={Default:CollapsedWhenFalse}}" />
+                                               Visibility="{Binding ShowLines, RelativeSource={RelativeSource AncestorType={x:Type Default:SharpTreeView}}, Converter={StaticResource CollapsedWhenFalse}}" />
                         <StackPanel Orientation="Horizontal">
                             <FrameworkElement x:Name="PART_Spacer" />
                             <ToggleButton x:Name="PART_Expander"

@@ -17,19 +17,16 @@ namespace ICSharpCode.TreeView
 		public EditTextBox(SharpTreeViewItem item)
 		{
 			Item = item;
-			Loaded += delegate { Init(); };
+			Loaded += delegate {
+				Text = Node.LoadEditText();
+				Focus();
+				SelectAll();
+			};
 		}
 
 		public SharpTreeViewItem Item { get; }
 
 		public SharpTreeNode Node => Item.Node;
-
-		private void Init()
-		{
-			Text = Node.LoadEditText();
-			Focus();
-			SelectAll();
-		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
 		{

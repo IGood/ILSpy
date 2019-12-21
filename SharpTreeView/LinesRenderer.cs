@@ -36,17 +36,16 @@ namespace ICSharpCode.TreeView
 
 			if (node.IsRoot) return;
 
-			if (node.IsLast) {
-				dc.DrawLine(pen, p, new Point(p.X, ActualHeight / 2));
-			} else {
+			if (!node.IsLast) {
 				dc.DrawLine(pen, p, new Point(p.X, ActualHeight));
+			} else {
+				dc.DrawLine(pen, p, new Point(p.X, ActualHeight / 2));
 			}
-
 			var current = node;
 			while (true) {
 				p.X -= 19;
-				current = current.Parent!;
 				if (p.X < 0) break;
+				current = current.Parent!;
 				if (!current.IsLast) {
 					dc.DrawLine(pen, p, new Point(p.X, ActualHeight));
 				}

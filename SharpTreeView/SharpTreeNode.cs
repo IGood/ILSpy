@@ -21,44 +21,47 @@ namespace ICSharpCode.TreeView
 		private void UpdateIsVisible(bool parentIsVisible, bool updateFlattener)
 		{
 			bool newIsVisible = parentIsVisible && !isHidden;
-			if (isVisible != newIsVisible) {
-				isVisible = newIsVisible;
 
-				// invalidate the augmented data
-				SharpTreeNode? node = this;
-				while (node?.totalListLength >= 0) {
-					node.totalListLength = -1;
-					node = node.listParent;
-				}
-				// Remember the removed nodes:
-				List<SharpTreeNode>? removedNodes = null;
-				if (updateFlattener && !newIsVisible) {
-					removedNodes = VisibleDescendantsAndSelf().ToList();
-				}
-				// also update the model children:
-				UpdateChildIsVisible(false);
+			if (isVisible == newIsVisible) {
+				return;
+			}
 
-				// Validate our invariants:
-				if (updateFlattener)
-					CheckRootInvariants();
+			isVisible = newIsVisible;
 
-				// Tell the flattener about the removed nodes:
-				if (removedNodes != null) {
-					var flattener = GetListRoot().treeFlattener;
-					if (flattener != null) {
-						flattener.NodesRemoved(GetVisibleIndexForNode(this), removedNodes);
-						foreach (var n in removedNodes)
-							n.OnIsVisibleChanged();
-					}
+			// invalidate the augmented data
+			SharpTreeNode? node = this;
+			while (node?.totalListLength >= 0) {
+				node.totalListLength = -1;
+				node = node.listParent;
+			}
+			// Remember the removed nodes:
+			List<SharpTreeNode>? removedNodes = null;
+			if (updateFlattener && !newIsVisible) {
+				removedNodes = VisibleDescendantsAndSelf().ToList();
+			}
+			// also update the model children:
+			UpdateChildIsVisible(false);
+
+			// Validate our invariants:
+			if (updateFlattener)
+				CheckRootInvariants();
+
+			// Tell the flattener about the removed nodes:
+			if (removedNodes != null) {
+				var flattener = GetListRoot().treeFlattener;
+				if (flattener != null) {
+					flattener.NodesRemoved(GetVisibleIndexForNode(this), removedNodes);
+					foreach (var n in removedNodes)
+						n.OnIsVisibleChanged();
 				}
-				// Tell the flattener about the new nodes:
-				if (updateFlattener && newIsVisible) {
-					var flattener = GetListRoot().treeFlattener;
-					if (flattener != null) {
-						flattener.NodesInserted(GetVisibleIndexForNode(this), VisibleDescendantsAndSelf());
-						foreach (var n in VisibleDescendantsAndSelf())
-							n.OnIsVisibleChanged();
-					}
+			}
+			// Tell the flattener about the new nodes:
+			if (updateFlattener && newIsVisible) {
+				var flattener = GetListRoot().treeFlattener;
+				if (flattener != null) {
+					flattener.NodesInserted(GetVisibleIndexForNode(this), VisibleDescendantsAndSelf());
+					foreach (var n in VisibleDescendantsAndSelf())
+						n.OnIsVisibleChanged();
 				}
 			}
 		}
@@ -274,21 +277,15 @@ namespace ICSharpCode.TreeView
 
 		internal IEnumerable<SharpTreeNode> VisibleDescendantsAndSelf() => TreeTraversal.PreOrder(this, n => n.Children.Where(c => c.isVisible));
 
-		public IEnumerable<SharpTreeNode> Ancestors()
-		{
-			var node = this;
-			while (node.Parent != null) {
-				yield return node.Parent;
-				node = node.Parent;
-			}
-		}
+		public IEnumerable<SharpTreeNode> Ancestors() => AncestorsAndSelf().Skip(1);
 
 		public IEnumerable<SharpTreeNode> AncestorsAndSelf()
 		{
-			yield return this;
-			foreach (var node in Ancestors()) {
+			SharpTreeNode? node = this;
+			do {
 				yield return node;
-			}
+				node = node.Parent;
+			} while (node != null);
 		}
 
 		#endregion

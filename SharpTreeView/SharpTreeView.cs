@@ -138,16 +138,9 @@ namespace ICSharpCode.TreeView
 		private void flattener_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			// Deselect nodes that are being hidden, if any remain in the tree
-			if (e.Action == NotifyCollectionChangedAction.Remove && Items.Count > 0) {
-				List<SharpTreeNode>? selectedOldItems = null;
-				foreach (SharpTreeNode? node in e.OldItems) {
-					if (node!.IsSelected) {
-						if (selectedOldItems == null)
-							selectedOldItems = new List<SharpTreeNode>();
-						selectedOldItems.Add(node);
-					}
-				}
-				if (!updatesLocked && selectedOldItems != null) {
+			if (!updatesLocked && e.Action == NotifyCollectionChangedAction.Remove && Items.Count > 0) {
+				var selectedOldItems = e.OldItems.Cast<SharpTreeNode>().Where(node => node.IsSelected).ToList();
+				if (selectedOldItems.Count > 0) {
 					var list = SelectedItems.Cast<SharpTreeNode>().Except(selectedOldItems).ToList();
 					UpdateFocusedNode(list, Math.Max(0, e.OldStartingIndex - 1));
 				}
@@ -201,7 +194,7 @@ namespace ICSharpCode.TreeView
 			}
 			if (lastVisibleChild != node) {
 				// Make the the expanded children are visible; but don't scroll down
-				// to much (keep node itself visible)
+				// too much (keep node itself visible)
 				base.ScrollIntoView(lastVisibleChild);
 				// For some reason, this only works properly when delaying it...
 				Dispatcher.InvokeAsync(() => base.ScrollIntoView(node), DispatcherPriority.Loaded);
@@ -261,10 +254,8 @@ namespace ICSharpCode.TreeView
 				case Key.Back:
 					if (IsTextSearchEnabled) {
 						var instance = SharpTreeViewTextSearch.GetInstance(this);
-						if (instance != null) {
-							instance.RevertLastCharacter();
-							e.Handled = true;
-						}
+						instance.RevertLastCharacter();
+						e.Handled = true;
 					}
 					break;
 			}
@@ -276,13 +267,11 @@ namespace ICSharpCode.TreeView
 		{
 			if (!string.IsNullOrEmpty(e.Text) && IsTextSearchEnabled && (e.OriginalSource == this || ItemsControl.ItemsControlFromItemContainer(e.OriginalSource as DependencyObject) == this)) {
 				var instance = SharpTreeViewTextSearch.GetInstance(this);
-				if (instance != null) {
-					instance.Search(e.Text);
-					e.Handled = true;
-				}
-			}
-			if (!e.Handled)
+				instance.Search(e.Text);
+				e.Handled = true;
+			} else {
 				base.OnTextInput(e);
+			}
 		}
 
 		private void ExpandRecursively(SharpTreeNode node)
@@ -303,9 +292,15 @@ namespace ICSharpCode.TreeView
 			ScrollIntoView(node);
 			// WPF's ScrollIntoView() uses the same if/dispatcher construct, so we call OnFocusItem() after the item was brought into view.
 			if (this.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated) {
-				OnFocusItem(node);
+				TryFocusContainer();
 			} else {
-				this.Dispatcher.InvokeAsync(() => this.OnFocusItem(node), DispatcherPriority.Loaded);
+				this.Dispatcher.InvokeAsync(TryFocusContainer, DispatcherPriority.Loaded);
+			}
+
+			void TryFocusContainer()
+			{
+				if (this.ItemContainerGenerator.ContainerFromItem(node) is FrameworkElement element)
+					element.Focus();
 			}
 		}
 
@@ -316,13 +311,6 @@ namespace ICSharpCode.TreeView
 				ancestor.IsExpanded = true;
 			doNotScrollOnExpanding = false;
 			base.ScrollIntoView(node);
-		}
-
-		private object? OnFocusItem(object item)
-		{
-			FrameworkElement? element = this.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
-			element?.Focus();
-			return null;
 		}
 
 		protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => new SharpTreeViewAutomationPeer(this);
@@ -419,14 +407,8 @@ namespace ICSharpCode.TreeView
 
 		private DropTarget? GetDropTarget(SharpTreeViewItem item, DragEventArgs e)
 		{
-			var dropTargets = BuildDropTargets(item, e);
-			var y = e.GetPosition(item).Y;
-			foreach (var target in dropTargets) {
-				if (target.Y >= y) {
-					return target;
-				}
-			}
-			return null;
+			double y = e.GetPosition(item).Y;
+			return BuildDropTargets(item, e).FirstOrDefault(target => target.Y >= y);
 		}
 
 		private List<DropTarget> BuildDropTargets(SharpTreeViewItem item, DragEventArgs e)
@@ -449,10 +431,10 @@ namespace ICSharpCode.TreeView
 				}
 			}
 
-			var h = item.ActualHeight;
-			var y1 = 0.2 * h;
-			var y2 = h / 2;
-			var y3 = h - y1;
+			double h = item.ActualHeight;
+			double y1 = 0.2 * h;
+			double y2 = h / 2;
+			double y3 = h - y1;
 
 			if (result.Count == 2) {
 				if (result[0].Place == DropPlace.Inside &&
@@ -544,7 +526,7 @@ namespace ICSharpCode.TreeView
 				insertMarker.Margin = new Thickness(p.X, p.Y, 0, 0);
 
 				SharpTreeNodeView? secondNodeView = null;
-				var index = flattener!.IndexOf(item.Node);
+				int index = flattener!.IndexOf(item.Node);
 
 				if (place == DropPlace.Before) {
 					if (index > 0) {
@@ -554,7 +536,7 @@ namespace ICSharpCode.TreeView
 					secondNodeView = ((SharpTreeViewItem)ItemContainerGenerator.ContainerFromIndex(index + 1)).NodeView;
 				}
 
-				var w = p1.X + previewNodeView.ActualWidth - p.X;
+				double w = p1.X + previewNodeView.ActualWidth - p.X;
 
 				if (secondNodeView != null) {
 					var p2 = secondNodeView.TransformToVisual(this).Transform(new Point());
@@ -635,7 +617,7 @@ namespace ICSharpCode.TreeView
 		/// </summary>
 		public IEnumerable<SharpTreeNode> GetTopLevelSelection()
 		{
-			var selection = this.SelectedItems.OfType<SharpTreeNode>();
+			var selection = this.SelectedItems.Cast<SharpTreeNode>();
 			var selectionHash = new HashSet<SharpTreeNode>(selection);
 			return selection.Where(item => item.Ancestors().All(a => !selectionHash.Contains(a)));
 		}
