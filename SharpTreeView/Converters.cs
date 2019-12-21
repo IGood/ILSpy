@@ -2,10 +2,10 @@
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
 using System;
-using System.Windows;
-using System.Windows.Markup;
-using System.Windows.Data;
 using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Markup;
 
 namespace ICSharpCode.TreeView
 {
@@ -13,19 +13,10 @@ namespace ICSharpCode.TreeView
 	{
 		public static CollapsedWhenFalse Instance = new CollapsedWhenFalse();
 
-		public override object ProvideValue(IServiceProvider serviceProvider)
-		{
-			return Instance;
-		}
+		public override object ProvideValue(IServiceProvider serviceProvider) => Instance;
 
-		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			return (bool)value ? Visibility.Visible : Visibility.Collapsed;
-		}
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (bool)value ? Visibility.Visible : Visibility.Collapsed;
 
-		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			throw new NotImplementedException();
-		}
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
 	}
 }

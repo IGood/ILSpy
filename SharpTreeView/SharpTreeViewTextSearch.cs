@@ -16,27 +16,21 @@ namespace ICSharpCode.TreeView
 	public class SharpTreeViewTextSearch : DependencyObject
 	{
 		[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-		static extern int GetDoubleClickTime();
+		private static extern int GetDoubleClickTime();
 
-		static readonly DependencyPropertyKey TextSearchInstancePropertyKey = DependencyProperty.RegisterAttachedReadOnly("TextSearchInstance",
+		private static readonly DependencyPropertyKey TextSearchInstancePropertyKey = DependencyProperty.RegisterAttachedReadOnly("TextSearchInstance",
 			typeof(SharpTreeViewTextSearch), typeof(SharpTreeViewTextSearch), new FrameworkPropertyMetadata(null));
-		static readonly DependencyProperty TextSearchInstanceProperty = TextSearchInstancePropertyKey.DependencyProperty;
-
-		DispatcherTimer timer;
-
-		bool isActive;
-		int lastMatchIndex;
-		string matchPrefix;
-
-		readonly Stack<string> inputStack;
-		readonly SharpTreeView treeView;
+		private static readonly DependencyProperty TextSearchInstanceProperty = TextSearchInstancePropertyKey.DependencyProperty;
+		private DispatcherTimer? timer;
+		private bool isActive;
+		private int lastMatchIndex = -1;
+		private string matchPrefix = string.Empty;
+		private readonly Stack<string> inputStack = new Stack<string>(8);
+		private readonly SharpTreeView treeView;
 
 		private SharpTreeViewTextSearch(SharpTreeView treeView)
 		{
-			if (treeView == null)
-				throw new ArgumentNullException(nameof(treeView));
 			this.treeView = treeView;
-			inputStack = new Stack<string>(8);
 			ClearState();
 		}
 
@@ -54,7 +48,7 @@ namespace ICSharpCode.TreeView
 		{
 			if (!isActive || inputStack.Count == 0)
 				return false;
-			matchPrefix = matchPrefix.Substring(0, matchPrefix.Length - inputStack.Pop().Length);
+			matchPrefix = matchPrefix.Remove(matchPrefix.Length - inputStack.Pop().Length);
 			ResetTimeout();
 			return true;
 		}
@@ -82,7 +76,7 @@ namespace ICSharpCode.TreeView
 			return nextMatchIndex != -1;
 		}
 
-		int IndexOfMatch(string needle, int startIndex, bool tryBackward, out bool charWasUsed)
+		private int IndexOfMatch(string needle, int startIndex, bool tryBackward, out bool charWasUsed)
 		{
 			charWasUsed = false;
 			if (treeView.Items.Count == 0 || string.IsNullOrEmpty(needle))
@@ -94,8 +88,8 @@ namespace ICSharpCode.TreeView
 			var comparisonType = treeView.IsTextSearchCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 			do {
 				var item = (SharpTreeNode)treeView.Items[i];
-				if (item != null && item.Text != null) {
-					string text = item.Text.ToString();
+				string? text = item.Text?.ToString();
+				if (text != null) {
 					if (text.StartsWith(needle, comparisonType)) {
 						charWasUsed = true;
 						index = i;
@@ -115,10 +109,10 @@ namespace ICSharpCode.TreeView
 				if (i >= treeView.Items.Count)
 					i = 0;
 			} while (i != startIndex);
-			return index == -1 ? fallbackIndex : index;
+			return (index == -1) ? fallbackIndex : index;
 		}
 
-		void ClearState()
+		private void ClearState()
 		{
 			isActive = false;
 			matchPrefix = string.Empty;
@@ -128,11 +122,11 @@ namespace ICSharpCode.TreeView
 			timer = null;
 		}
 
-		void ResetTimeout()
+		private void ResetTimeout()
 		{
 			if (timer == null) {
 				timer = new DispatcherTimer(DispatcherPriority.Normal);
-				timer.Tick += (sender, e) => ClearState();
+				timer.Tick += delegate { ClearState(); };
 			} else {
 				timer.Stop();
 			}

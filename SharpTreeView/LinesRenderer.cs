@@ -1,13 +1,13 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
-using System.Diagnostics;
 
 namespace ICSharpCode.TreeView
 {
-	class LinesRenderer : FrameworkElement
+	internal class LinesRenderer : FrameworkElement
 	{
 		static LinesRenderer()
 		{
@@ -15,41 +15,37 @@ namespace ICSharpCode.TreeView
 			pen.Freeze();
 		}
 
-		static Pen pen;
-
-		SharpTreeNodeView NodeView
-		{
-			get { return TemplatedParent as SharpTreeNodeView; }
-		}
+		private static readonly Pen pen;
 
 		protected override void OnRender(DrawingContext dc)
 		{
-			if (NodeView.Node == null) {
+			var nodeView = TemplatedParent as SharpTreeNodeView;
+			SharpTreeNode? node = nodeView?.Node;
+			if (node == null) {
 				// This seems to happen sometimes with DataContext==DisconnectedItem,
 				// though I'm not sure why WPF would call OnRender() on a disconnected node
-				Debug.WriteLine($"LinesRenderer.OnRender() called with DataContext={NodeView.DataContext}");
+				Debug.WriteLine($"LinesRenderer.OnRender() called with DataContext={nodeView?.DataContext}");
 				return;
 			}
-			var indent = NodeView.CalculateIndent();
+			double indent = nodeView!.CalculateIndent();
 			var p = new Point(indent + 4.5, 0);
 
-			if (!NodeView.Node.IsRoot || NodeView.ParentTreeView.ShowRootExpander) {
+			if (!node.IsRoot || nodeView.ParentTreeView.ShowRootExpander) {
 				dc.DrawLine(pen, new Point(p.X, ActualHeight / 2), new Point(p.X + 10, ActualHeight / 2));
 			}
 
-			if (NodeView.Node.IsRoot) return;
+			if (node.IsRoot) return;
 
-			if (NodeView.Node.IsLast) {
+			if (node.IsLast) {
 				dc.DrawLine(pen, p, new Point(p.X, ActualHeight / 2));
-			}
-			else {
+			} else {
 				dc.DrawLine(pen, p, new Point(p.X, ActualHeight));
 			}
 
-			var current = NodeView.Node;
+			var current = node;
 			while (true) {
 				p.X -= 19;
-				current = current.Parent;
+				current = current.Parent!;
 				if (p.X < 0) break;
 				if (!current.IsLast) {
 					dc.DrawLine(pen, p, new Point(p.X, ActualHeight));

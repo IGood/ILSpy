@@ -1,32 +1,30 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows;
 
 namespace ICSharpCode.TreeView
 {
-	class EditTextBox : TextBox
+	internal class EditTextBox : TextBox
 	{
 		static EditTextBox()
 		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(EditTextBox),
-				new FrameworkPropertyMetadata(typeof(EditTextBox)));
+			DefaultStyleKeyProperty.OverrideMetadata(typeof(EditTextBox), new FrameworkPropertyMetadata(typeof(EditTextBox)));
 		}
 
-		public EditTextBox()
+		public EditTextBox(SharpTreeViewItem item)
 		{
+			Item = item;
 			Loaded += delegate { Init(); };
 		}
 
-		public SharpTreeViewItem Item { get; set; }
+		public SharpTreeViewItem Item { get; }
 
-		public SharpTreeNode Node {
-			get { return Item.Node; }
-		}
+		public SharpTreeNode Node => Item.Node;
 
-		void Init()
+		private void Init()
 		{
 			Text = Node.LoadEditText();
 			Focus();
@@ -49,9 +47,9 @@ namespace ICSharpCode.TreeView
 			}
 		}
 
-		bool committing;
+		private bool committing;
 
-		void Commit()
+		private void Commit()
 		{
 			if (!committing) {
 				committing = true;
@@ -60,7 +58,7 @@ namespace ICSharpCode.TreeView
 				if (!Node.SaveEditText(Text)) {
 					Item.Focus();
 				}
-				Node.RaisePropertyChanged("Text");
+				Node.RaisePropertyChanged(nameof(SharpTreeNode.Text));
 
 				//if (Node.SaveEditText(Text)) {
 				//    Node.IsEditing = false;

@@ -1,29 +1,21 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
-using System.Windows.Documents;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace ICSharpCode.TreeView
 {
 	public class GeneralAdorner : Adorner
 	{
-		public GeneralAdorner(UIElement target)
-			: base(target)
-		{
-		}
+		public GeneralAdorner(UIElement target) : base(target) { }
 
-		FrameworkElement child;
+		private FrameworkElement? child;
 
-		public FrameworkElement Child
-		{
-			get
-			{
-				return child;
-			}
-			set
-			{
+		public FrameworkElement? Child {
+			get => child;
+			set {
 				if (child != value) {
 					RemoveVisualChild(child);
 					RemoveLogicalChild(child);
@@ -35,15 +27,9 @@ namespace ICSharpCode.TreeView
 			}
 		}
 
-		protected override int VisualChildrenCount
-		{
-			get { return child == null ? 0 : 1; }
-		}
+		protected override int VisualChildrenCount => (child != null) ? 1 : 0;
 
-		protected override Visual GetVisualChild(int index)
-		{
-			return child;
-		}
+		protected override Visual? GetVisualChild(int index) => child;
 
 		protected override Size MeasureOverride(Size constraint)
 		{

@@ -1,17 +1,17 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media;
 using System.Windows;
-using System.Collections;
+using System.Windows.Media;
 
 namespace ICSharpCode.TreeView
 {
-	static class ExtensionMethods
+	internal static class ExtensionMethods
 	{
-		public static T FindAncestor<T>(this DependencyObject d) where T : class
+		public static T? FindAncestor<T>(this DependencyObject d) where T : class
 		{
 			return AncestorsAndSelf(d).OfType<T>().FirstOrDefault();
 		}

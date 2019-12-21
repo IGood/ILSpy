@@ -1,8 +1,8 @@
 ﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
-using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace ICSharpCode.TreeView
 {
@@ -10,8 +10,7 @@ namespace ICSharpCode.TreeView
 	{
 		static InsertMarker()
 		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(InsertMarker),
-				new FrameworkPropertyMetadata(typeof(InsertMarker)));
+			DefaultStyleKeyProperty.OverrideMetadata(typeof(InsertMarker), new FrameworkPropertyMetadata(typeof(InsertMarker)));
 		}
 	}
 }
